@@ -15,4 +15,7 @@ epochs = 1000
 steps = 1000
 
 def train(epochs=epochs, steps=steps):
-    pass
+    robot = Robot()
+    env = Environment(α, β, r_search, r_wait, robot)
+    
+    #TODO: finish
