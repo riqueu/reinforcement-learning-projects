@@ -63,7 +63,7 @@ class Environment:
 
 
 class Robot:
-    def __init__(self, ε=0.05, lr=0.1):
+    def __init__(self, ε=0.001, lr=0.1):
         self.ε = ε
         self.lr = lr
         self.estimations = np.ones(shape=(2, 3))
@@ -125,6 +125,7 @@ class Robot:
             next_state_idx = self.state_hist[k+1] - 1
             action_idx = self.action_hist[k]
             reward = self.reward_hist[k]
+            #gamma = 0.95
             
             # encontra Q-value máximo em cada caso possível
             if self.state_hist[k+1] == 2:

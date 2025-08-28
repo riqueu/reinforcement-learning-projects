@@ -27,20 +27,26 @@ def train(epochs=epochs, steps=steps):
             action = robot.act()
             env.step(state=robot.state_hist[-1], action=action)
             action_count[action] += 1
-            #if j % 100 == 0:
-                #print(j, ": ", end="")
-                #print(robot.state_hist[-2], action_list[robot.action_hist[-1]], robot.reward_hist[-1])
+
+            # backup a cada 200 passos
+            if j % 200 == 0 and j > 0:
+                robot.backup()
+        
+        # backup ao final de uma epoch
         robot.backup()
+        
         if i % 50 == 0:
             print(f'Epoch: {i} | Reward: {np.sum(robot.reward_hist)}\r', end='')
         
         rewards.append(np.sum(robot.reward_hist))
         robot.reset()
         #print(action_count)
+
+    optimal_policy = robot.estimations
     robot.save_policy()
     print("")
     
-    return rewards, action_count
+    return rewards, action_count, optimal_policy
           
 
 def write_rewards(rewards):
@@ -50,8 +56,12 @@ def write_rewards(rewards):
 
 if __name__ == '__main__':
     # treina e salva histórico de recompensas
-    rewards, action_count = train()
+    rewards, action_count, optimal_policy = train()
+    
     # escreve arquivo rewards.txt
     write_rewards(rewards)
+
+    # salva plotagems
     save_fig_rewards(rewards)
     save_fig_action_distribution(action_count)
+    save_fig_optimal_policy_heatmap(optimal_policy)
