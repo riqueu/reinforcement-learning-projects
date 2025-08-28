@@ -27,7 +27,7 @@ class Environment:
         next_state, reward = state, None
 
         # Bateria Baixa
-        if state.battery_level == 1:
+        if state == 1:
             # Procurou com bateria baixa
             if action == "search":
                 if random.random() < self.β:
@@ -46,7 +46,7 @@ class Environment:
                 reward = 0
 
         # Bateria Alta
-        if state.battery_level == 2:
+        if state == 2:
             # Procurou com bateria alta
             if action == "search":
                 if random.random() >= self.α:
@@ -58,20 +58,20 @@ class Environment:
             elif action == "wait":
                 reward = self.r_wait
         
-        self.robot.set_state(next_state.hash())
+        self.robot.set_state(next_state)
         self.robot.set_reward(reward)
 
 
 class Robot:
-    def __init__(self, ε=0.1, lr=0.1):
+    def __init__(self, ε=0.05, lr=0.1):
         self.ε = ε
         self.lr = lr
-        self.estimations = np.ndarray.ones(shape=(2, 3), dtype=object)
+        self.estimations = np.ones(shape=(2, 3))
         self.estimations[1, 2] = 0
         self.actions_list = ["search", "wait", "recharge"]
-        self.state_hist = []
-        self.reward_hist = []
-        self.action_hist = []
+        self.state_hist = [] # histórico de baterias (int, 1 para low, 2 para high)
+        self.reward_hist = [] # histórico de recompensas (float)
+        self.action_hist = [] # histórico de ação (int, index)
 
     def reset(self):
         self.state_hist = []
@@ -80,18 +80,23 @@ class Robot:
         self.action_hist = []
     
     def set_state(self, state):
-        self.state_hist.append(state)
+        # garante que está adicionando a bateria, e não o estado
+        if isinstance(state, State):
+            self.state_hist.append(state.hash())
+        else:
+            self.state_hist.append(state)
 
     def set_reward(self, reward):
         self.reward_hist.append(reward)
 
     def act(self):
         state = self.state_hist[-1]
+        state_idx = state - 1
         values = []
         
         # caso epsilon
         if random.random() < self.ε:
-            if state.battery_level == 2:
+            if state == 2:
                 action = random.choice(self.actions_list[:-1])
             else:
                 action = random.choice(self.actions_list)
@@ -100,23 +105,40 @@ class Robot:
             return action
         
         # lida com ação invalida (recarregar com bateria cheia)
-        if state.battery_level == 2:
+        if state == 2:
             for action_idx in range(self.estimations.shape[1] - 1):
-                values.append((self.estimations[state-1][action_idx], action_idx))
+                values.append((self.estimations[state_idx][action_idx], action_idx))
         else:
             for action_idx in range(self.estimations.shape[1]):
-                values.append((self.estimations[state-1][action_idx], action_idx))
+                values.append((self.estimations[state_idx][action_idx], action_idx))
         
         np.random.shuffle(values)
         values.sort(key=lambda x: x[0], reverse=True)
         action_idx = values[0][1]
 
+        self.action_hist.append(action_idx)
         return self.actions_list[action_idx]
 
     def backup(self):
         for k in range(len(self.state_hist) - 1):
-            td_error = self.reward_hist[k] + self.estimations[self.state_hist[k+1]][self.action_hist[k]] - self.estimations[self.state_hist[k]][self.action_hist[k]]
-            self.estimations[self.state_hist[k+1]][self.action_hist[k]] += self.lr * td_error
+            curr_state_idx = self.state_hist[k] - 1
+            next_state_idx = self.state_hist[k+1] - 1
+            action_idx = self.action_hist[k]
+            reward = self.reward_hist[k]
+            
+            # encontra Q-value máximo em cada caso possível
+            if self.state_hist[k+1] == 2:
+                next_values = [self.estimations[next_state_idx][0], 
+                            self.estimations[next_state_idx][1]]
+            else:
+                next_values = [self.estimations[next_state_idx][a] for a in range(3)]
+                
+            max_next_q = max(next_values)
+            
+            # update td com max_q
+            curr_q = self.estimations[curr_state_idx][action_idx]
+            td_error = reward + max_next_q - curr_q
+            self.estimations[curr_state_idx][action_idx] += self.lr * td_error
 
     def save_policy(self):
         with open('policy.pkl', 'wb') as f:
