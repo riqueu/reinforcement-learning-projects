@@ -47,3 +47,27 @@ $$
 O código foi implementado usando pair programming (no caso desse projeto, foi um trabalho simultâneo de 3 pessoas), onde foram escritos os seguintes arquivos:
 
 ### main.py
+
+## Resultados
+Como resultados, obtive-se o gráfico de recompensas totais por epoch e a política ótima aprendida, ambos plotados usando o arquivo “viz.py”. Segue abaixo o gráfico da média das recompensas por epoch:
+
+<div style="text-align: center;">
+  <img src="rewards_multiple_runs.png" width="600"/>
+</div> 
+
+Esse gráfico, como já descrito, contém a média das recompensas totais obtidas em cada epoch, que como pode ser observado, mostra um aprendizado  acentuado nas epochs iniciais e uma estagnação após, o que pode estar refletindo que o agente...
+O que também é evidenciado ao analisar a política ótima aprendida, sendo plotada no heatmap a seguir:
+
+<div style="text-align: center;">
+  <img src="optimal_policy_heatmap.png" width="600"/>
+</div> 
+
+É possível notar que o agente aprendeu a sempre que estiver com bateria alta buscar, e quando a bateria estiver baixa recarregar. Mostrando uma abordagem de menos risco para obter recompensas. Um ponto também interessante é a preferência por não usar a ação de esperar, refletindo a baixa recompensa de esperar, sendo então preferível mesmo no estado de baixa bateria recarregar ao envés de esperar, uma vez que buscando com a bateria alta a recompensa será mais alta e sem risco de receber punições. 
+
+Esta preferencia pode ser observada no gráfico de barras a seguir, que evidencia a quantidade de vezes que cada ação foi tomada:
+
+<div style="text-align: center;">
+  <img src="action_distribution.png" width="600"/>
+</div> 
+
+O que reafirma o que foi constatado na política apreendida, é observado em sua maioria a ação de “buscar”, seguida pela “recarregar”. Com uma ínfima porção da ação “esperar”, que provavelmente é realizada no início antes do aprendizado da política ótima e também por conta da metodologia exploratória “epsilon-greedy”, que com uma probabilidade ε escolhe uma ação aleatória dentre as disponíveis para estado do agente.
