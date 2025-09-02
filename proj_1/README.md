@@ -48,6 +48,24 @@ O código foi implementado usando pair programming (no caso desse projeto, foi u
 
 ### main.py
 
+O arquivo main.py contém o loop central da simulação e do treinamento. Nele são definidos os parâmetros: número de epochs (1000) e passos por epoch (1000). Também são configurados os valores das probabilidades α = 0.3 e β = 0.2. Para as recompensas, foram atribuídos 3.5 para 𝑟<sub>search</sub>, e de 0.5 para o 𝑟<sub>wait</sub>. Esses valores foram escolhidos para representar um cenário no qual a busca é relativamente segura e altamente recompensatória.
+
+### ultils.py
+
+No arquivo utils.py, está implementada a lógica de funcionamento do robô, estruturada em três classes:
+
+- **State**: responsável por armazenar os estados possíveis do robô, sendo dois: bateria baixa e bateria alta;
+
+- **Environment**: utiliza os parâmetros (probabilidades e recompensas) definidos em main.py para executar as transições de estados e calcular as recompensas;
+
+- **Robot**: representa o agente, responsável pela tomada de decisão em cada estado com base em uma política de aprendizado por reforço. Além disso, realiza a atualização da política ao longo do treinamento.
+
+### viz.py
+
+O arquivo viz.py concentra todas as funções responsáveis pela visualização dos resultados obtidos durante o treinamento do robô. Utilizando das bibliotecas Matplotlib, Seaborn e NumPy para gerar e salvar os gráficos.
+
+Além da criação dos gráficos, o módulo também realiza o tratamento dos valores resultantes da simulação implementando a função softmax, para converter os valores da política aprendida em probabilidades, facilitando a interpretação da estratégia adotada pelo agente.
+
 ## Resultados
 Como resultados, obtive-se o gráfico de recompensas totais por epoch e a política ótima aprendida, ambos plotados usando o arquivo “viz.py”. Segue abaixo o gráfico da média das recompensas por epoch:
 
