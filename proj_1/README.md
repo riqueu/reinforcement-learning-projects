@@ -41,6 +41,8 @@ M_{i j} = M_{i j} + \gamma (r + max{M_{i'} - M_{i j}})
 $$
 
 - Atualizações por epoch: Em cada epoch, foi preferido atualizar a política a cada 200 passos, ao contrário de atualizar a cada passo da epoch.
+  
+- Hiperparâmetros: Para a atualização da política foi utilizado o learning rate de 0.1 e para epsilon-greedy foi utilizado o ε de 0.001.
 
 ## Código
 
@@ -87,7 +89,7 @@ Esta preferência pode ser observada no gráfico de barras a seguir, que evidenc
   <img src="action_distribution.png" width="600"/>
 </div> 
 
-Reafirmando o constatado na política apreendida, é observado em sua maioria a ação de “buscar”, seguida pela “recarregar”. Também é evidente uma ínfima porção da ação “aguardar”, o que provavelmente se dá pelas escolhas tomadas no início, antes da aprendizagem da política, e também por conta da metodologia exploratória “epsilon-greedy”, que com uma probabilidade ε escolhe uma ação aleatória dentre as disponíveis para o estado do agente.
+Reafirmando o constatado na política apreendida, é observado em sua maioria a ação de “buscar”, seguida pela “recarregar”. Também é evidente uma ínfima porção da ação “aguardar”, o que provavelmente se dá pelas escolhas tomadas no início, antes da aprendizagem da política, e também por conta da metodologia exploratória “epsilon-greedy”, que com uma probabilidade ε (0.001) escolhe uma ação aleatória dentre as disponíveis para o estado do agente.
 
 ## Conclusão
 
