@@ -12,13 +12,13 @@ Utilizamos a extensão do VSCode [Live Share](https://github.com/Microsoft/live-
 
 ## Introdução
 
-Neste projeto foi desenvolvido um agente de aprendizado por reforço para controlar a operação de um robô cujo objetivo é a coleta de latas. A implementação segue o enunciado do Exemplo 3.3 do livro Reinforcement Learning: An Introduction (Second Edition), página 53.
+Neste projeto foi desenvolvido um agente de aprendizado por reforço para controlar a operação de um robô cujo objetivo é a coleta de latas. A implementação segue o enunciado do Exemplo 3.3 do livro Reinforcement Learning: An Introduction (Second Edition), página 52.
 
 O agente foi modelado com dois estados possíveis: bateria alta e bateria baixa. Quando o robô está no estado de bateria baixa, ele pode escolher entre três ações:
 
 - Aguardar, recebendo uma recompensa 𝑟<sub>wait</sub>.
 
-- Buscar, com probabilidade $1-\beta$ da busca ser bem-sucedida, recebendo uma recompensa 𝑟<sub>search</sub>, e com uma probabilidade β da bateria se esgotar completamente. Situação em que o robô precisa ser resgatado, retornando ao estado de bateria cheia e recebendo uma penalidade de −3.
+- Buscar, com probabilidade $\beta$ da busca ser bem-sucedida, recebendo uma recompensa 𝑟<sub>search</sub>, e com uma probabilidade $1-\beta$ da bateria se esgotar completamente. Situação em que o robô precisa ser resgatado, retornando ao estado de bateria cheia e recebendo uma penalidade de −3.
 
 - Recarregar, retorna o estado da bateria ao nível alto.
 
@@ -26,7 +26,7 @@ Já no estado de bateria alta, o agente tem a seguintes opções de ações:
 
 - Aguardar, recebendo uma recompensa 𝑟<sub>wait</sub>.
 
-- Buscar, recebendo uma recompensa 𝑟<sub>search</sub>, com uma probabilidade α dê o estado da bateria ser atualizado para baixo.
+- Buscar, recebendo uma recompensa 𝑟<sub>search</sub>, com uma probabilidade $1-\alpha$ dê o estado da bateria ser atualizado para baixo.
 
 ## Decisões tomadas
 
@@ -40,17 +40,17 @@ $$
 M_{i j} = M_{i j} + \gamma (r + max{M_{i'} - M_{i j}})
 $$
 
-- Atualizações por epoch: Em cada epoch, foi preferido atualizar a política uma única vez no fim da epoch, ao contrário de atualizar a cada passo da epoch.
+- Atualizações por epoch: Em cada epoch, foi preferido atualizar a política a cada 200 passos, ao contrário de atualizar a cada passo da epoch.
 
 ## Código
 
 O código foi implementado usando pair programming (no caso desse projeto, foi um trabalho simultâneo de 3 pessoas), onde foram escritos os seguintes arquivos:
 
-### main.py
+### [main.py](main.py)
 
 O arquivo main.py contém o loop central da simulação e do treinamento. Nele são definidos os parâmetros: número de epochs (1000) e passos por epoch (1000). Também são configurados os valores das probabilidades α = 0.3 e β = 0.2. Para as recompensas, foram atribuídos 3.5 para 𝑟<sub>search</sub>, e de 0.5 para o 𝑟<sub>wait</sub>. Esses valores foram escolhidos para representar um cenário no qual a busca é relativamente segura e altamente recompensatória.
 
-### ultils.py
+### [utils.py](utils.py)
 
 No arquivo utils.py, está implementada a lógica de funcionamento do robô, estruturada em três classes:
 
@@ -60,14 +60,14 @@ No arquivo utils.py, está implementada a lógica de funcionamento do robô, est
 
 - **Robot**: representa o agente, responsável pela tomada de decisão em cada estado com base em uma política de aprendizado por reforço. Além disso, realiza a atualização da política ao longo do treinamento.
 
-### viz.py
+### [viz.py](viz.py)
 
 O arquivo viz.py concentra todas as funções responsáveis pela visualização dos resultados obtidos durante o treinamento do robô. Utilizando das bibliotecas Matplotlib, Seaborn e NumPy para gerar e salvar os gráficos.
 
 Além da criação dos gráficos, o módulo também realiza o tratamento dos valores resultantes da simulação implementando a função softmax, para converter os valores da política aprendida em probabilidades, facilitando a interpretação da estratégia adotada pelo agente.
 
 ## Resultados
-Como resultados, obteve-se o gráfico de recompensas totais por epoch e a política ótima aprendida. Segue abaixo o gráfico da média das recompensas por epoch:
+Como resultados, obteve-se o gráfico de recompensas totais por epoch e a política ótima aprendida. Segue abaixo o gráfico das recompensas por epoch de 10 experimentos realizados e, destacado em vermelho, a média das recompensas:
 
 <div style="text-align: center;">
   <img src="rewards_multiple_runs.png" width="600"/>
@@ -79,7 +79,7 @@ Esse gráfico, como já descrito, contém a média das recompensas totais obtida
   <img src="optimal_policy_heatmap.png" width="600"/>
 </div> 
 
-É possível notar que o agente aprendeu a sempre que estiver com bateria alta buscar, e quando a bateria estiver baixa recarregar. Mostrando uma abordagem de menos risco para obter recompensas. Um ponto também interessante é a preferência por não usar a ação de aguardar, refletindo a baixa recompensa desta ação. Sendo então preferível mesmo no estado de baixa bateria, recarregar ao invés de aguardar, uma vez que buscando com a bateria alta a recompensa será maior e sem risco de receber punições. 
+É possível notar que o agente aprendeu a usar a ação "Buscar" sempre que estiver com bateria alta, e "Recarregar" quando a bateria estiver baixa. Mostrando uma abordagem de menos risco para obter recompensas. Um ponto também interessante é a preferência por não usar a ação de aguardar, refletindo a baixa recompensa desta ação. Sendo então preferível mesmo no estado de baixa bateria, recarregar ao invés de aguardar, uma vez que buscando com a bateria alta a recompensa será maior e sem risco de receber punições. 
 
 Esta preferência pode ser observada no gráfico de barras a seguir, que evidencia a quantidade de vezes que cada ação foi tomada:
 
