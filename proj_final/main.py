@@ -28,32 +28,28 @@ if __name__ == "__main__":
 
     # Define the network configuration
     NET_CONFIG = {
-        "latent_dim": 64,
-        "encoder_config": {
-            "hidden_size": [64],  # Actor hidden size
-        },
-        "head_config": {
-            "hidden_size": [64],  # Critic hidden size
-        },
+        "latent_dim": 32,
+        "encoder_config": {"hidden_size": [64]},
+        "head_config": {"hidden_size": [64]},
     }
 
     # Define the initial hyperparameters
     INIT_HP = {
         "POPULATION_SIZE": 4,
-        "ALGO": "MATD3",  # Algorithm
-        "BATCH_SIZE": 128,  # Batch size
-        "O_U_NOISE": True,  # Ornstein Uhlenbeck action noise
-        "EXPL_NOISE": 0.1,  # Action noise scale
-        "MEAN_NOISE": 0.0,  # Mean action noise
-        "THETA": 0.15,  # Rate of mean reversion in OU noise
-        "DT": 0.01,  # Timestep for OU noise
-        "LR_ACTOR": 0.0001,  # Actor learning rate
-        "LR_CRITIC": 0.001,  # Critic learning rate
-        "GAMMA": 0.95,  # Discount factor
-        "MEMORY_SIZE": 100000,  # Max memory buffer size
-        "LEARN_STEP": 100,  # Learning frequency
-        "TAU": 0.01,  # For soft update of target parameters
-        "POLICY_FREQ": 2,  # Policy frequnecy
+        "ALGO": "MATD3",
+        "BATCH_SIZE": 512,
+        "O_U_NOISE": False,
+        "EXPL_NOISE": 0.2,
+        "MEAN_NOISE": 0.0,
+        "THETA": 0.15,
+        "DT": 0.01,
+        "LR_ACTOR": 3e-4,
+        "LR_CRITIC": 1e-3,
+        "GAMMA": 0.99,
+        "MEMORY_SIZE": 100000,
+        "LEARN_STEP": 20,
+        "TAU": 0.01,
+        "POLICY_FREQ": 1,
     }
 
     num_envs = 8
@@ -112,13 +108,13 @@ if __name__ == "__main__":
 
     # Instantiate a mutations object (used for HPO)
     mutations = Mutations(
-        no_mutation=0.2,  # Probability of no mutation
-        architecture=0.2,  # Probability of architecture mutation
-        new_layer_prob=0.2,  # Probability of new layer mutation
-        parameters=0.2,  # Probability of parameter mutation
-        activation=0,  # Probability of activation function mutation
-        rl_hp=0.2,  # Probability of RL hyperparameter mutation
-        mutation_sd=0.1,  # Mutation strength
+        no_mutation=0.15,
+        architecture=0.15,
+        new_layer_prob=0.1,
+        parameters=0.25,
+        activation=0,
+        rl_hp=0.3,
+        mutation_sd=0.2,
         rand_seed=1,
         device=device,
     )
