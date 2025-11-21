@@ -16,6 +16,7 @@ from agilerl.algorithms.core.registry import HyperparameterConfig, RLParameter
 from agilerl.components.multi_agent_replay_buffer import MultiAgentReplayBuffer
 from agilerl.hpo.mutation import Mutations
 from agilerl.hpo.tournament import TournamentSelection
+from agilerl.algorithms.core.registry import NetworkGroup
 from agilerl.utils.utils import (
     create_population,
     default_progress_bar,
@@ -28,9 +29,21 @@ if __name__ == "__main__":
 
     # Define the network configuration
     NET_CONFIG = {
-        "latent_dim": 32,
-        "encoder_config": {"hidden_size": [64]},
-        "head_config": {"hidden_size": [64]},
+        "speaker": {
+            "encoder_config": {"hidden_size": [64, 64], "activation": "ReLU"},
+            "head_config": {"hidden_size": [64]},
+        },
+        "listener": {
+            "encoder_config": {"hidden_size": [64, 64], "activation": "ReLU"},
+            "head_config": {"hidden_size": [64]},
+        },
+        "critic": {
+            "encoder_config": {
+                "multi_input": True,
+                "hidden_size": [128, 128],
+            },
+            "head_config": {"hidden_size": [128]},
+        },
     }
 
     # Define the initial hyperparameters
@@ -70,15 +83,35 @@ if __name__ == "__main__":
     hp_config = HyperparameterConfig(
         lr_actor=RLParameter(min=1e-4, max=1e-2),
         lr_critic=RLParameter(min=1e-4, max=1e-2),
-        batch_size=RLParameter(min=8, max=512, dtype=int),
-        learn_step=RLParameter(
-            min=20, max=200, dtype=int, grow_factor=1.5, shrink_factor=0.75
-        ),
+        batch_size=RLParameter(min=32, max=512, dtype=int),
+        learn_step=RLParameter(min=10, max=200, dtype=int, grow_factor=1.5, shrink_factor=0.75),
+        tau=RLParameter(min=1e-3, max=1e-1),
+        expl_noise=RLParameter(min=0.0, max=0.5),
     )
+
+    # Subclass MATD3 to include registry information
+    class MATD3WithRegistry(MATD3):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+
+            # Register speaker and listener actors
+            self.register_network_group(
+                NetworkGroup(eval=self.actor["speaker"], policy=True)
+            )
+            self.register_network_group(
+                NetworkGroup(eval=self.actor["listener"], policy=True)
+            )
+
+            # Register centralized critic
+            self.register_network_group(
+                NetworkGroup(eval=self.critic, policy=False)
+            )
+
 
     # Create a population ready for evolutionary hyper-parameter optimisation
     pop: list[MATD3] = create_population(
         INIT_HP["ALGO"],
+        MATD3WithRegistry,
         observation_spaces,
         action_spaces,
         NET_CONFIG,
@@ -108,14 +141,14 @@ if __name__ == "__main__":
 
     # Instantiate a mutations object (used for HPO)
     mutations = Mutations(
-        no_mutation=0.15,
-        architecture=0.15,
+        no_mutation=0.2,
+        architecture=0.3,
         new_layer_prob=0.1,
-        parameters=0.25,
-        activation=0,
+        parameters=0.2,
+        activation=0.0,
         rl_hp=0.3,
-        mutation_sd=0.2,
-        rand_seed=1,
+        mutation_sd=0.15,
+        rand_seed=42,
         device=device,
     )
 
