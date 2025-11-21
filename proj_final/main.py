@@ -110,7 +110,6 @@ if __name__ == "__main__":
 
     # Create a population ready for evolutionary hyper-parameter optimisation
     pop: list[MATD3] = create_population(
-        INIT_HP["ALGO"],
         MATD3WithRegistry,
         observation_spaces,
         action_spaces,
