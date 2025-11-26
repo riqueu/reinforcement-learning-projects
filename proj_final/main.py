@@ -8,7 +8,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from pettingzoo.mpe import simple_speaker_listener_v4
+# from pettingzoo.mpe import simple_speaker_listener_v4
 from mpe2 import simple_speaker_listener_v4
 
 from agilerl.algorithms import MATD3
@@ -24,6 +24,7 @@ from agilerl.utils.utils import (
 )
 
 if __name__ == "__main__":
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("===== AgileRL Online Multi-Agent Demo =====")
 
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     INIT_HP = {
         "POPULATION_SIZE": 4,
         "ALGO": "MATD3",
-        "BATCH_SIZE": 512,
+        "BATCH_SIZE": 1024,
         "O_U_NOISE": False,
         "EXPL_NOISE": 0.2,
         "MEAN_NOISE": 0.0,
@@ -83,34 +84,15 @@ if __name__ == "__main__":
     hp_config = HyperparameterConfig(
         lr_actor=RLParameter(min=1e-4, max=1e-2),
         lr_critic=RLParameter(min=1e-4, max=1e-2),
-        batch_size=RLParameter(min=32, max=512, dtype=int),
-        learn_step=RLParameter(min=10, max=200, dtype=int, grow_factor=1.5, shrink_factor=0.75),
-        tau=RLParameter(min=1e-3, max=1e-1),
-        expl_noise=RLParameter(min=0.0, max=0.5),
+        batch_size=RLParameter(min=8, max=512, dtype=int),
+        learn_step=RLParameter(min=20, max=200, dtype=int, grow_factor=1.5, shrink_factor=0.75),
+        tau=RLParameter(min=1e-3, max=1e-2),
+        policy_freq=RLParameter(min=2, max=5, dtype=int)
     )
 
-    # Subclass MATD3 to include registry information
-    class MATD3WithRegistry(MATD3):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-
-            # Register speaker and listener actors
-            self.register_network_group(
-                NetworkGroup(eval=self.actor["speaker"], policy=True)
-            )
-            self.register_network_group(
-                NetworkGroup(eval=self.actor["listener"], policy=True)
-            )
-
-            # Register centralized critic
-            self.register_network_group(
-                NetworkGroup(eval=self.critic, policy=False)
-            )
-
-
     # Create a population ready for evolutionary hyper-parameter optimisation
-    pop: list[MATD3] = create_population(
-        MATD3WithRegistry,
+    pop = create_population(
+        "MATD3",
         observation_spaces,
         action_spaces,
         NET_CONFIG,
@@ -152,7 +134,8 @@ if __name__ == "__main__":
     )
 
     # Define training loop parameters
-    max_steps = 2_000_000  # Max steps (default: 2000000)
+    # max_steps = 2_000_000  # Max steps (default: 2000000)
+    max_steps = 400_000  # Max steps (default: 2000000)
     learning_delay = 0  # Steps before starting learning
     evo_steps = 10_000  # Evolution frequency
     eval_steps = None  # Evaluation steps per episode - go until done
