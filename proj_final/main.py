@@ -8,7 +8,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-# from pettingzoo.mpe import simple_speaker_listener_v4
+from pettingzoo.mpe import simple_speaker_listener_v4
 from mpe2 import simple_speaker_listener_v4
 
 from agilerl.algorithms import MATD3
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     print("===== AgileRL Online Multi-Agent Demo =====")
 
     # Define the network configuration
-    NET_CONFIG = {
+    """NET_CONFIG = {
         "speaker": {
             "encoder_config": {"hidden_size": [64, 64], "activation": "ReLU"},
             "head_config": {"hidden_size": [64]},
@@ -45,24 +45,29 @@ if __name__ == "__main__":
             },
             "head_config": {"hidden_size": [128]},
         },
+    }"""
+    NET_CONFIG = {
+        "latent_dim": 128,
+        "encoder_config": {"hidden_size": [128]},
+        "head_config": {"hidden_size": [128]},
     }
 
     # Define the initial hyperparameters
     INIT_HP = {
-        "POPULATION_SIZE": 4,
+        "POPULATION_SIZE": 5,
         "ALGO": "MATD3",
         "BATCH_SIZE": 1024,
-        "O_U_NOISE": False,
-        "EXPL_NOISE": 0.2,
+        "O_U_NOISE": True,
+        "EXPL_NOISE": 0.1,
         "MEAN_NOISE": 0.0,
         "THETA": 0.15,
         "DT": 0.01,
         "LR_ACTOR": 3e-4,
-        "LR_CRITIC": 1e-3,
+        "LR_CRITIC": 2e-3,
         "GAMMA": 0.99,
-        "MEMORY_SIZE": 100000,
-        "LEARN_STEP": 20,
-        "TAU": 0.01,
+        "MEMORY_SIZE": 150000,
+        "LEARN_STEP": 32,
+        "TAU": 0.005,
         "POLICY_FREQ": 1,
     }
 
@@ -82,12 +87,13 @@ if __name__ == "__main__":
 
     # Mutation config for RL hyperparameters
     hp_config = HyperparameterConfig(
-        lr_actor=RLParameter(min=1e-4, max=1e-2),
-        lr_critic=RLParameter(min=1e-4, max=1e-2),
-        batch_size=RLParameter(min=8, max=512, dtype=int),
-        learn_step=RLParameter(min=20, max=200, dtype=int, grow_factor=1.5, shrink_factor=0.75),
+        lr_actor=RLParameter(min=1e-6, max=1e-2),
+        lr_critic=RLParameter(min=1e-6, max=1e-2),
+        batch_size=RLParameter(min=8, max=2048, dtype=int),
+        learn_step=RLParameter(min=16, max=256, dtype=int, grow_factor=1.3, shrink_factor=0.8),
         tau=RLParameter(min=1e-3, max=1e-2),
-        policy_freq=RLParameter(min=2, max=5, dtype=int)
+        policy_freq=RLParameter(min=2, max=5, dtype=int),
+        gamma=RLParameter(min=0.95, max=0.9975)
     )
 
     # Create a population ready for evolutionary hyper-parameter optimisation
@@ -122,29 +128,34 @@ if __name__ == "__main__":
 
     # Instantiate a mutations object (used for HPO)
     mutations = Mutations(
-        no_mutation=0.2,
-        architecture=0.3,
-        new_layer_prob=0.1,
+        no_mutation=0.35,
+        architecture=0.075,
+        new_layer_prob=0.05,
         parameters=0.2,
         activation=0.0,
-        rl_hp=0.3,
-        mutation_sd=0.15,
+        rl_hp=0.15,
+        mutation_sd=0.10,
         rand_seed=42,
         device=device,
     )
 
     # Define training loop parameters
-    # max_steps = 2_000_000  # Max steps (default: 2000000)
-    max_steps = 400_000  # Max steps (default: 2000000)
+    max_steps = 2_000_000  # Max steps (default: 2000000)
+    # max_steps = 400_000  # Max steps (default: 2000000)
     learning_delay = 0  # Steps before starting learning
     evo_steps = 10_000  # Evolution frequency
     eval_steps = None  # Evaluation steps per episode - go until done
     eval_loop = 1  # Number of evaluation episodes
     elite = pop[0]  # Assign a placeholder "elite" agent
     total_steps = 0
-    
+    noise_start = INIT_HP["EXPL_NOISE"]
+    noise_decay = 100000
+
     # Lista para armazenar pontuações médias para plotagem
     training_scores_history = []
+
+    # best agent hist
+    best_fitness_history = []
 
     # TRAINING LOOP
     print("Training...")
@@ -164,6 +175,10 @@ if __name__ == "__main__":
                 next_obs, reward, termination, truncation, info = env.step(
                     action
                 )  # Act in environment
+
+                # reduces exploration noise (noise decay)
+                explNoise = noise_start + (min(total_steps / noise_decay, 1.0) * (0.01 - noise_start))
+                agent.EXPL_NOISE = explNoise
 
                 scores += np.sum(np.array(list(reward.values())).transpose(), axis=-1)
                 total_steps += num_envs
@@ -248,6 +263,7 @@ if __name__ == "__main__":
         # Salvar pontuação média da população para plotagem
         population_mean_score = np.mean([score for score in mean_scores if isinstance(score, (int, float))])
         training_scores_history.append(population_mean_score)
+        best_fitness_history.append(max(fitnesses))
 
         mean_scores_display = [
             (
@@ -269,6 +285,9 @@ if __name__ == "__main__":
         # Tournament selection and population mutation
         elite, pop = tournament.select(pop)
         pop = mutations.mutation(pop)
+
+        # não mutar o agent elite
+        pop[0] = elite
 
         # Update step counter
         for agent in pop:
