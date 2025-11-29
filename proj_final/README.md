@@ -52,4 +52,36 @@ Sua tarefa é implementar um novo algoritmo de aprendizado por reforço multi-ag
 
 Para saber mais sobre o algoritmo MATD3, consulte [este artigo](https://arxiv.org/abs/1910.01465).
 
+## Relatório
+
+### Introdução
+
+Esse relatório visa apresentar as principais alterações realizadas no modelo de Reinforcement Learning Multi-Agent para o ambiente Speaker-Listener. O objetivo da tarefa foi melhorar o desempenho do algoritmo, obtendo um score médio maior que -60, obtido anteriormente. A seguir, serão apresentadas as principais mudanças e ideias que foram implementadas no modelo a fim de aprimorar seu desempenho.
+
+### Mudanças Realizadas
+
+Com o intuito de melhorar a performance do algoritmo, foram realizadas as seguintes mudanças:
+
+- **Alteração dos parâmetros de treinamento da Rede Neural:** O tamanho (dimensão) das camadas ocultas foi aumentado de 64 para 128;
+- **Alteração no ```POPULATION_SIZE```:** $4 \to 5$;
+- **Alteração no ```BATCH_SIZE```:** $128 \to 1024$;
+- **Alteração no ```LR_ACTOR```:** $0.0001 \to 0.0003$;
+- **Alteração no ```LR_CRITIC```:** $0.001 \to 0.002$;
+- **Alteração no ```GAMMA```:** $0.95 \to 0.99$;
+- **Alteração no ```MEMORY_SIZE```:** $100000 \to 150000$;
+- **Alteração no ```LEARN_STEP```:** $100 \to 32$;
+- **Alteração no ```TAU```:** $0.01 \to 0.005$;
+- **Alteração no ```LEARN_STEP```:** $2 \to 1$;
+
+Além dessas mudanças, foi implementado um noise decay para diminuir o noise do modelo ao longo das iterações. O modelo começa com um noise inicial de 0.1, que diminui ao longo dos passos até chegar no valor de 0.01. O noise ajuda o modelo a evitar overfitting, mas atrapalha o treinamento depois de muitas iterações, por isso, foi preferido implementar esse ajuste no ruído.
+
+Mesmo com todas essas alterações, foi tentado realizar um treinamento distinto para a rede neural de cada agente, com parâmetros próprios, uma vez que a documentação da biblioteca torna explícito que isso pode ser realizado. Apesar disso, o modelo com essa alteração não apresentou melhorias significantes em relação ao modelo original, evidenciando que a proposta não teve o desempenho esperado. Mesmo assim, a ideia do treinamento personalizado para cada agente pode, com as devidas correções, aprimorar ainda mais o desempenho do modelo, caso seja realizado da forma ideal.
+
+### Resultados Obtidos
+
+Após as alterações dos parâmetros e a implementação do noise decay, o modelo apresentou melhorias significativas em relação ao modelo inicial. Abaixo é possível observar o gráfico do desempenho do modelo atualizado ao longo das iterações.
+
+![](models/MATD3/training_scores_evolution.png)
+
+Pelo gráfico acima, é possível notar um ganho de performance em relação ao algoritmo original. Antes das alterações, o modelo possuia um score médio de -60, que, após as atualizações, aumentou para -40. Portanto, concluí-se que as alterações melhoraram o desempenho do modelo, que apresentou um score mais alto e superou as metas estabelecidas.
 
