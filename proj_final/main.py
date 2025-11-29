@@ -56,19 +56,19 @@ if __name__ == "__main__":
     INIT_HP = {
         "POPULATION_SIZE": 5,
         "ALGO": "MATD3",
-        "BATCH_SIZE": 1024,
+        "BATCH_SIZE": 512,
         "O_U_NOISE": True,
-        "EXPL_NOISE": 0.1,
+        "EXPL_NOISE": 0.2,
         "MEAN_NOISE": 0.0,
-        "THETA": 0.15,
+        "THETA": 0.2,
         "DT": 0.01,
-        "LR_ACTOR": 3e-4,
-        "LR_CRITIC": 2e-3,
-        "GAMMA": 0.99,
-        "MEMORY_SIZE": 150000,
-        "LEARN_STEP": 32,
-        "TAU": 0.005,
-        "POLICY_FREQ": 1,
+        "LR_ACTOR": 1e-4,
+        "LR_CRITIC": 3e-3,
+        "GAMMA": 0.98,
+        "MEMORY_SIZE": 200000,
+        "LEARN_STEP": 16,
+        "TAU": 0.01,
+        "POLICY_FREQ": 3,
     }
 
     num_envs = 8
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     elite = pop[0]  # Assign a placeholder "elite" agent
     total_steps = 0
     noise_start = INIT_HP["EXPL_NOISE"]
-    noise_decay = 100000
+    noise_decay = 200000
 
     # Lista para armazenar pontuações médias para plotagem
     training_scores_history = []
